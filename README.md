@@ -277,6 +277,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Version History
 
+- 1.0.2
+  - Fixed namespace conflict by renaming StripeTransaction class to StripeTransactionManager
+  - Improved code organization and readability
+  - Updated documentation with new class name
+  - Enhanced error handling and logging
+
+- 1.0.1
+  - Added support for multiple operations in a single transaction
+  - Improved error handling
+  - Enhanced logging capabilities
+  - Added more examples and documentation
+
 - 1.0.0
   - Initial release
   - Support for basic Stripe operations

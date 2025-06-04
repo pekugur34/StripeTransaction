@@ -5,7 +5,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>8.0</LangVersion>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Authors>pekugur34</Authors>
     <Description>A .NET library that provides transaction-like behavior for Stripe operations, ensuring atomicity and rollback capabilities for complex Stripe operations.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

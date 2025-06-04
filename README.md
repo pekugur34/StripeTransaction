@@ -36,10 +36,23 @@ dotnet add package StripeTransaction
 // Initialize with your Stripe API key
 StripeTransactionConfiguration.Initialize("your_stripe_api_key");
 
-// Use the transaction
+// Modern using declaration (C# 8.0+)
+using var transaction = new StripeTransaction();
+
+// Create a customer
+var customer = await transaction.ExecuteAsync(async () =>
+{
+    var customerService = new CustomerService();
+    return await customerService.CreateAsync(new CustomerCreateOptions
+    {
+        Email = "customer@example.com",
+        Name = "John Doe"
+    });
+});
+
+// Traditional using statement (all C# versions)
 using (var transaction = new StripeTransaction())
 {
-    // Create a customer
     var customer = await transaction.ExecuteAsync(async () =>
     {
         var customerService = new CustomerService();
@@ -56,6 +69,9 @@ using (var transaction = new StripeTransaction())
 
 ### Customer Operations
 ```csharp
+// Modern using declaration
+using var transaction = new StripeTransaction();
+
 // Create customer
 var customer = await transaction.ExecuteAsync(async () =>
 {
@@ -80,6 +96,8 @@ await transaction.ExecuteAsync(async () =>
 
 ### Payment Method Operations
 ```csharp
+using var transaction = new StripeTransaction();
+
 // Create and attach payment method
 var (paymentMethod, customer) = await transaction.ExecuteAsync(async () =>
 {
@@ -107,6 +125,8 @@ var (paymentMethod, customer) = await transaction.ExecuteAsync(async () =>
 
 ### Subscription Operations
 ```csharp
+using var transaction = new StripeTransaction();
+
 // Create subscription
 var subscription = await transaction.ExecuteAsync(async () =>
 {
@@ -127,6 +147,8 @@ var subscription = await transaction.ExecuteAsync(async () =>
 
 ### Payment Intent Operations
 ```csharp
+using var transaction = new StripeTransaction();
+
 // Create and confirm payment intent
 var paymentIntent = await transaction.ExecuteAsync(async () =>
 {
@@ -144,6 +166,8 @@ var paymentIntent = await transaction.ExecuteAsync(async () =>
 
 ### Webhook Operations
 ```csharp
+using var transaction = new StripeTransaction();
+
 // Create webhook endpoint
 var webhook = await transaction.ExecuteAsync(async () =>
 {
@@ -158,64 +182,63 @@ var webhook = await transaction.ExecuteAsync(async () =>
 
 ### Complex Transaction Example
 ```csharp
-using (var transaction = new StripeTransaction())
+using var transaction = new StripeTransaction();
+
+var (customer, subscription, paymentIntent) = await transaction.ExecuteAsync(async () =>
 {
-    var (customer, subscription, paymentIntent) = await transaction.ExecuteAsync(async () =>
+    // 1. Create customer
+    var customerService = new CustomerService();
+    var customer = await customerService.CreateAsync(new CustomerCreateOptions
     {
-        // 1. Create customer
-        var customerService = new CustomerService();
-        var customer = await customerService.CreateAsync(new CustomerCreateOptions
-        {
-            Email = "customer@example.com",
-            Name = "John Doe"
-        });
-
-        // 2. Create and attach payment method
-        var paymentMethodService = new PaymentMethodService();
-        var paymentMethod = await paymentMethodService.CreateAsync(new PaymentMethodCreateOptions
-        {
-            Type = "card",
-            Card = new PaymentMethodCardOptions
-            {
-                Number = "4242424242424242",
-                ExpMonth = 12,
-                ExpYear = 2024,
-                Cvc = "123"
-            }
-        });
-        await paymentMethodService.AttachAsync(paymentMethod.Id, new PaymentMethodAttachOptions
-        {
-            Customer = customer.Id
-        });
-
-        // 3. Create subscription
-        var subscriptionService = new SubscriptionService();
-        var subscription = await subscriptionService.CreateAsync(new SubscriptionCreateOptions
-        {
-            Customer = customer.Id,
-            Items = new List<SubscriptionItemOptions>
-            {
-                new SubscriptionItemOptions
-                {
-                    Price = "price_H5ggYwtDq4fbrJ"
-                }
-            }
-        });
-
-        // 4. Create payment intent
-        var paymentIntentService = new PaymentIntentService();
-        var paymentIntent = await paymentIntentService.CreateAsync(new PaymentIntentCreateOptions
-        {
-            Amount = 2000,
-            Currency = "usd",
-            Customer = customer.Id,
-            PaymentMethod = paymentMethod.Id,
-            Confirm = true
-        });
-
-        return (customer, subscription, paymentIntent);
+        Email = "customer@example.com",
+        Name = "John Doe"
     });
-}
+
+    // 2. Create and attach payment method
+    var paymentMethodService = new PaymentMethodService();
+    var paymentMethod = await paymentMethodService.CreateAsync(new PaymentMethodCreateOptions
+    {
+        Type = "card",
+        Card = new PaymentMethodCardOptions
+        {
+            Number = "4242424242424242",
+            ExpMonth = 12,
+            ExpYear = 2024,
+            Cvc = "123"
+        }
+    });
+    await paymentMethodService.AttachAsync(paymentMethod.Id, new PaymentMethodAttachOptions
+    {
+        Customer = customer.Id
+    });
+
+    // 3. Create subscription
+    var subscriptionService = new SubscriptionService();
+    var subscription = await subscriptionService.CreateAsync(new SubscriptionCreateOptions
+    {
+        Customer = customer.Id,
+        Items = new List<SubscriptionItemOptions>
+        {
+            new SubscriptionItemOptions
+            {
+                Price = "price_H5ggYwtDq4fbrJ"
+            }
+        }
+    });
+
+    // 4. Create payment intent
+    var paymentIntentService = new PaymentIntentService();
+    var paymentIntent = await paymentIntentService.CreateAsync(new PaymentIntentCreateOptions
+    {
+        Amount = 2000,
+        Currency = "usd",
+        Customer = customer.Id,
+        PaymentMethod = paymentMethod.Id,
+        Confirm = true
+    });
+
+    return (customer, subscription, paymentIntent);
+});
 ```
 
 ## Error Handling
@@ -223,10 +246,8 @@ using (var transaction = new StripeTransaction())
 ```csharp
 try
 {
-    using (var transaction = new StripeTransaction())
-    {
-        // Your transaction code
-    }
+    using var transaction = new StripeTransaction();
+    // Your transaction code
 }
 catch (StripeException ex)
 {
@@ -250,16 +271,14 @@ public class CustomLogger : IStripeTransactionLogger
 }
 
 // Use custom logger
-using (var transaction = new StripeTransaction(new CustomLogger()))
-{
-    // Your transaction code
-}
+using var transaction = new StripeTransaction(new CustomLogger());
+// Your transaction code
 ```
 
 ## Best Practices
 
 1. Always initialize the library with your Stripe API key at application startup
-2. Use the `using` statement to ensure proper disposal and rollback
+2. Use the `using` declaration for cleaner code (C# 8.0+)
 3. Implement proper error handling
 4. Use custom logging for better debugging
 5. Test your rollback scenarios thoroughly

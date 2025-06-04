@@ -1,23 +1,17 @@
 # StripeTransaction
 
-A .NET library that provides transaction-like behavior for Stripe operations, ensuring atomicity and rollback capabilities for complex Stripe operations.
-
 [![NuGet Version](https://img.shields.io/nuget/v/StripeTransaction.svg)](https://www.nuget.org/packages/StripeTransaction)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/StripeTransaction.svg)](https://www.nuget.org/packages/StripeTransaction)
+
+A .NET library that provides transaction-like behavior for Stripe operations, ensuring atomicity and rollback capabilities for complex Stripe operations.
 
 ## Features
 
 - 🔄 Transaction-like behavior for Stripe operations
-- ⚡ Automatic rollback on failure
-- 📝 Comprehensive logging support
-- 🛠️ Support for multiple Stripe operations:
-  - Customer management
-  - Payment method handling
-  - Subscription management
-  - Webhook endpoint management
-  - Payment intent processing
-  - Invoice management
-- 🔗 Support for executing multiple operations in a single transaction
+- ⚡ Support for multiple operations in a single transaction
+- 🔍 Automatic rollback on failure
+- 📝 Comprehensive logging
+- 🛡️ Type-safe operation handling
 
 ## Installation
 
@@ -33,36 +27,19 @@ dotnet add package StripeTransaction
 ## Quick Start
 
 ```csharp
-// Initialize with your Stripe API key
+// Initialize Stripe
 StripeTransactionConfiguration.Initialize("your_stripe_api_key");
 
-// Modern using declaration (C# 8.0+)
-using var transaction = new StripeTransaction();
+// Create a transaction
+using var transaction = new StripeTransactionManager();
 
-// Create a customer
-var customer = await transaction.ExecuteAsync(async () =>
-{
+// Execute operations within the transaction
+var customer = await transaction.ExecuteAsync(async () => {
     var customerService = new CustomerService();
-    return await customerService.CreateAsync(new CustomerCreateOptions
-    {
-        Email = "customer@example.com",
-        Name = "John Doe"
+    return await customerService.CreateAsync(new CustomerCreateOptions {
+        Email = "customer@example.com"
     });
 });
-
-// Traditional using statement (all C# versions)
-using (var transaction = new StripeTransaction())
-{
-    var customer = await transaction.ExecuteAsync(async () =>
-    {
-        var customerService = new CustomerService();
-        return await customerService.CreateAsync(new CustomerCreateOptions
-        {
-            Email = "customer@example.com",
-            Name = "John Doe"
-        });
-    });
-}
 ```
 
 ## Supported Operations

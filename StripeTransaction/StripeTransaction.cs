@@ -6,14 +6,14 @@ using StripeTransaction.Logging;
 
 namespace StripeTransaction
 {
-    public class StripeTransaction : IDisposable
+    public class StripeTransactionManager : IDisposable
     {
         private readonly List<Func<Task>> _rollbacks;
         private readonly IStripeTransactionLogger _logger;
         private bool _isCommitted;
         private bool _isDisposed;
 
-        public StripeTransaction(IStripeTransactionLogger? logger = null)
+        public StripeTransactionManager(IStripeTransactionLogger? logger = null)
         {
             if (string.IsNullOrEmpty(StripeConfiguration.ApiKey))
                 throw new InvalidOperationException("Stripe API key is not initialized. Call StripeTransactionConfiguration.Initialize() first.");
@@ -23,10 +23,10 @@ namespace StripeTransaction
             _isCommitted = false;
             _isDisposed = false;
 
-            _logger.LogDebug("StripeTransaction initialized");
+            _logger.LogDebug("StripeTransactionManager initialized");
         }
 
-        public async Task<T> ExecuteAsync<T>(Func<Task<T>> operation) where T : class
+        public async Task<T?> ExecuteAsync<T>(Func<Task<T>> operation) where T : class
         {
             if (_isCommitted || _isDisposed)
             {
@@ -44,6 +44,10 @@ namespace StripeTransaction
                 {
                     _logger.LogDebug($"Operation successful, adding rollback for {typeof(T).Name}");
                     _rollbacks.Add(() => GetRollbackOperation(result));
+                }
+                else
+                {
+                    _logger.LogWarning($"Operation returned null for type {typeof(T).Name}");
                 }
                 
                 return result;
@@ -93,9 +97,15 @@ namespace StripeTransaction
 
         private Task GetRollbackOperation<T>(T result) where T : class
         {
+            if (result == null)
+            {
+                _logger.LogWarning($"Cannot create rollback operation for null result of type {typeof(T).Name}");
+                return Task.CompletedTask;
+            }
+
             _logger.LogDebug($"Determining rollback operation for {typeof(T).Name}");
             
-            return (result switch
+            return result switch
             {
                 Customer customer => RollbackCustomer(customer),
                 PaymentMethod paymentMethod => RollbackPaymentMethod(paymentMethod),
@@ -104,7 +114,7 @@ namespace StripeTransaction
                 PaymentIntent paymentIntent => RollbackPaymentIntent(paymentIntent),
                 Invoice invoice => RollbackInvoice(invoice),
                 _ => Task.CompletedTask
-            })!;
+            };
         }
 
         private async Task RollbackCustomer(Customer customer)
@@ -234,7 +244,7 @@ namespace StripeTransaction
                     RollbackAsync().GetAwaiter().GetResult();
                 }
                 _isDisposed = true;
-                _logger.LogDebug("StripeTransaction disposed");
+                _logger.LogDebug("StripeTransactionManager disposed");
             }
         }
     }

@@ -2,8 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <LangVersion>8.0</LangVersion>
+    <Version>1.0.1</Version>
+    <Authors>pekugur34</Authors>
+    <Description>A .NET library that provides transaction-like behavior for Stripe operations, ensuring atomicity and rollback capabilities for complex Stripe operations.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/pekugur34/StripeTransaction</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/pekugur34/StripeTransaction.git</RepositoryUrl>
+    <PackageTags>stripe;transaction;payment;subscription;customer</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

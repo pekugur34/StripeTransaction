@@ -1,40 +1,17 @@
-# Stripe Transaction
+# StripeTransaction
 
 A .NET library that provides transaction-like behavior for Stripe operations, ensuring atomicity and rollback capabilities for complex Stripe operations.
 
-## Features
-
-- Transaction-like behavior for Stripe operations
-- Automatic rollback on failure
-- Comprehensive logging support
-- Support for multiple Stripe operations:
-  - Customer management
-  - Payment method handling
-  - Subscription management
-  - Webhook endpoint management
-  - Payment intent processing
-  - Invoice management
-
-## Installation
-
-```bash
-dotnet add package StripeTransaction
-```
+[![NuGet Version](https://img.shields.io/nuget/v/StripeTransaction.svg)](https://www.nuget.org/packages/StripeTransaction)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/StripeTransaction.svg)](https://www.nuget.org/packages/StripeTransaction)
 
 ## Quick Start
 
-1. Initialize the library with your Stripe API key:
-
 ```csharp
-using StripeTransaction;
-
 // Initialize with your Stripe API key
 StripeTransactionConfiguration.Initialize("your_stripe_api_key");
-```
 
-2. Use the transaction in your code:
-
-```csharp
+// Use the transaction
 using (var transaction = new StripeTransaction())
 {
     // Create a customer
@@ -64,77 +41,47 @@ using (var transaction = new StripeTransaction())
             }
         });
     });
-
-    // If any operation fails, all previous operations will be automatically rolled back
 }
 ```
 
-## Logging
+## Features
 
-The library supports custom logging through the `IStripeTransactionLogger` interface. By default, it uses a console logger, but you can implement your own logger:
+- 🔄 Transaction-like behavior for Stripe operations
+- ⚡ Automatic rollback on failure
+- 📝 Comprehensive logging support
+- 🛠️ Support for multiple Stripe operations:
+  - Customer management
+  - Payment method handling
+  - Subscription management
+  - Webhook endpoint management
+  - Payment intent processing
+  - Invoice management
 
-```csharp
-public class CustomLogger : IStripeTransactionLogger
-{
-    public void LogDebug(string message) { /* Your implementation */ }
-    public void LogInformation(string message) { /* Your implementation */ }
-    public void LogWarning(string message) { /* Your implementation */ }
-    public void LogError(string message, Exception? exception = null) { /* Your implementation */ }
-}
+## Installation
 
-// Use custom logger
-using (var transaction = new StripeTransaction(new CustomLogger()))
-{
-    // Your transaction code
-}
+```bash
+dotnet add package StripeTransaction
 ```
 
-## Supported Operations
+## Requirements
 
-The library supports rollback for the following Stripe operations:
+- .NET Core 3.1 or later (.NET Core 3.1, .NET 5, .NET 6, .NET 7, .NET 8)
+- Stripe.net 41.0.0 or later
 
-- Customer creation/deletion
-- Payment method attachment/detachment
-- Subscription creation/cancellation
-- Webhook endpoint creation/deletion
-- Payment intent creation/cancellation
-- Invoice creation/voiding
+## Documentation
 
-## Error Handling
-
-The library automatically handles errors and performs rollbacks when operations fail:
-
-```csharp
-try
-{
-    using (var transaction = new StripeTransaction())
-    {
-        // Your transaction code
-    }
-}
-catch (StripeException ex)
-{
-    // Handle Stripe-specific errors
-}
-catch (Exception ex)
-{
-    // Handle other errors
-}
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+For detailed documentation, examples, and API reference, visit our [GitHub repository](https://github.com/pekugur34/StripeTransaction).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Dependencies
-
-- .NET 6.0 or later
-- Stripe.net 41.0.0 or later
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/pekugur34/StripeTransaction/blob/main/LICENSE) file for details.
 
 ## Support
 
-For support, please open an issue in the GitHub repository. 
+- 📚 [Documentation](https://github.com/pekugur34/StripeTransaction)
+- 🐛 [Issue Tracker](https://github.com/pekugur34/StripeTransaction/issues)
+- 💬 [Discussions](https://github.com/pekugur34/StripeTransaction/discussions)
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. 

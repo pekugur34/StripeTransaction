@@ -49,90 +49,114 @@ using (var transaction = new StripeTransaction())
             Name = "John Doe"
         });
     });
-
-    // Add a payment method
-    var paymentMethod = await transaction.ExecuteAsync(async () =>
-    {
-        var paymentMethodService = new PaymentMethodService();
-        return await paymentMethodService.CreateAsync(new PaymentMethodCreateOptions
-        {
-            Type = "card",
-            Card = new PaymentMethodCardOptions
-            {
-                Number = "4242424242424242",
-                ExpMonth = 12,
-                ExpYear = 2024,
-                Cvc = "123"
-            }
-        });
-    });
 }
 ```
 
-## Features
+## Supported Operations
 
-- 🔄 Transaction-like behavior for Stripe operations
-- ⚡ Automatic rollback on failure
-- 📝 Comprehensive logging support
-- 🛠️ Support for multiple Stripe operations:
-  - Customer management
-  - Payment method handling
-  - Subscription management
-  - Webhook endpoint management
-  - Payment intent processing
-  - Invoice management
-### Multiple Operations in a Single Transaction
-
-You can also execute multiple operations in a single `ExecuteAsync` call:
-
+### Customer Operations
 ```csharp
-using (var transaction = new StripeTransaction())
+// Create customer
+var customer = await transaction.ExecuteAsync(async () =>
 {
-    // Create a customer and attach a payment method in one transaction
-    var (customer, paymentMethod) = await transaction.ExecuteAsync(async () =>
+    var service = new CustomerService();
+    return await service.CreateAsync(new CustomerCreateOptions
     {
-        // Create customer
-        var customerService = new CustomerService();
-        var customer = await customerService.CreateAsync(new CustomerCreateOptions
-        {
-            Email = "customer@example.com",
-            Name = "John Doe"
-        });
+        Email = "customer@example.com",
+        Name = "John Doe"
+    });
+});
 
-        // Create payment method
-        var paymentMethodService = new PaymentMethodService();
-        var paymentMethod = await paymentMethodService.CreateAsync(new PaymentMethodCreateOptions
-        {
-            Type = "card",
-            Card = new PaymentMethodCardOptions
-            {
-                Number = "4242424242424242",
-                ExpMonth = 12,
-                ExpYear = 2024,
-                Cvc = "123"
-            }
-        });
+// Update customer
+await transaction.ExecuteAsync(async () =>
+{
+    var service = new CustomerService();
+    await service.UpdateAsync(customer.Id, new CustomerUpdateOptions
+    {
+        Description = "Updated customer"
+    });
+});
+```
 
-        // Attach payment method to customer
-        await paymentMethodService.AttachAsync(paymentMethod.Id, new PaymentMethodAttachOptions
+### Payment Method Operations
+```csharp
+// Create and attach payment method
+var (paymentMethod, customer) = await transaction.ExecuteAsync(async () =>
+{
+    var paymentMethodService = new PaymentMethodService();
+    var paymentMethod = await paymentMethodService.CreateAsync(new PaymentMethodCreateOptions
+    {
+        Type = "card",
+        Card = new PaymentMethodCardOptions
         {
-            Customer = customer.Id
-        });
-
-        // Return both objects
-        return (customer, paymentMethod);
+            Number = "4242424242424242",
+            ExpMonth = 12,
+            ExpYear = 2024,
+            Cvc = "123"
+        }
     });
 
-    // Use the customer and payment method
-    Console.WriteLine($"Created customer: {customer.Id}");
-    Console.WriteLine($"Attached payment method: {paymentMethod.Id}");
-}
+    await paymentMethodService.AttachAsync(paymentMethod.Id, new PaymentMethodAttachOptions
+    {
+        Customer = customer.Id
+    });
+
+    return (paymentMethod, customer);
+});
+```
+
+### Subscription Operations
+```csharp
+// Create subscription
+var subscription = await transaction.ExecuteAsync(async () =>
+{
+    var service = new SubscriptionService();
+    return await service.CreateAsync(new SubscriptionCreateOptions
+    {
+        Customer = customer.Id,
+        Items = new List<SubscriptionItemOptions>
+        {
+            new SubscriptionItemOptions
+            {
+                Price = "price_H5ggYwtDq4fbrJ"
+            }
+        }
+    });
+});
+```
+
+### Payment Intent Operations
+```csharp
+// Create and confirm payment intent
+var paymentIntent = await transaction.ExecuteAsync(async () =>
+{
+    var service = new PaymentIntentService();
+    return await service.CreateAsync(new PaymentIntentCreateOptions
+    {
+        Amount = 2000,
+        Currency = "usd",
+        Customer = customer.Id,
+        PaymentMethod = paymentMethod.Id,
+        Confirm = true
+    });
+});
+```
+
+### Webhook Operations
+```csharp
+// Create webhook endpoint
+var webhook = await transaction.ExecuteAsync(async () =>
+{
+    var service = new WebhookEndpointService();
+    return await service.CreateAsync(new WebhookEndpointCreateOptions
+    {
+        Url = "https://your-domain.com/webhook",
+        EnabledEvents = new List<string> { "payment_intent.succeeded" }
+    });
+});
 ```
 
 ### Complex Transaction Example
-
-Here's an example of a more complex transaction with multiple operations:
-
 ```csharp
 using (var transaction = new StripeTransaction())
 {
@@ -189,44 +213,12 @@ using (var transaction = new StripeTransaction())
             Confirm = true
         });
 
-        // Return all created objects
         return (customer, subscription, paymentIntent);
     });
-
-    // Use the created objects
-    Console.WriteLine($"Created customer: {customer.Id}");
-    Console.WriteLine($"Created subscription: {subscription.Id}");
-    Console.WriteLine($"Created payment intent: {paymentIntent.Id}");
 }
 ```
 
-## Advanced Usage
-
-### Custom Logging
-
-The library supports custom logging through the `IStripeTransactionLogger` interface:
-
-## Installation
-
-```bash
-dotnet add package StripeTransaction
-```
-
-## Requirements
-
-- .NET Core 3.1 or later (.NET Core 3.1, .NET 5, .NET 6, .NET 7, .NET 8)
-- Stripe.net 41.0.0 or later
-
-## Documentation
-
-For detailed documentation, examples, and API reference, visit our [GitHub repository](https://github.com/pekugur34/StripeTransaction).
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/pekugur34/StripeTransaction/blob/main/LICENSE) file for details.
-### Error Handling
-
-The library automatically handles errors and performs rollbacks when operations fail:
+## Error Handling
 
 ```csharp
 try
@@ -246,16 +238,23 @@ catch (Exception ex)
 }
 ```
 
-### Supported Operations
+## Custom Logging
 
-The library supports rollback for the following Stripe operations:
+```csharp
+public class CustomLogger : IStripeTransactionLogger
+{
+    public void LogDebug(string message) { /* Your implementation */ }
+    public void LogInformation(string message) { /* Your implementation */ }
+    public void LogWarning(string message) { /* Your implementation */ }
+    public void LogError(string message, Exception? exception = null) { /* Your implementation */ }
+}
 
-- Customer creation/deletion
-- Payment method attachment/detachment
-- Subscription creation/cancellation
-- Webhook endpoint creation/deletion
-- Payment intent creation/cancellation
-- Invoice creation/voiding
+// Use custom logger
+using (var transaction = new StripeTransaction(new CustomLogger()))
+{
+    // Your transaction code
+}
+```
 
 ## Best Practices
 
@@ -268,7 +267,7 @@ The library supports rollback for the following Stripe operations:
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
@@ -280,9 +279,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 🐛 [Issue Tracker](https://github.com/pekugur34/StripeTransaction/issues)
 - 💬 [Discussions](https://github.com/pekugur34/StripeTransaction/discussions)
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. 
 ## Version History
 
 - 1.0.0
@@ -290,4 +286,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
   - Support for basic Stripe operations
   - Automatic rollback functionality
   - Custom logging support
-  - Support for multiple operations in a single transaction 
+  - Support for multiple operations in a single transaction

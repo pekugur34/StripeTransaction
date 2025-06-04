@@ -1,14 +1,61 @@
 # StripeTransaction
 
-A .NET library that provides transaction support for Stripe operations with automatic rollback capabilities.
+A .NET library that provides transaction-like behavior for Stripe operations, ensuring atomicity and rollback capabilities for complex Stripe operations.
+
+[![NuGet Version](https://img.shields.io/nuget/v/StripeTransaction.svg)](https://www.nuget.org/packages/StripeTransaction)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/StripeTransaction.svg)](https://www.nuget.org/packages/StripeTransaction)
+
+## Quick Start
+
+```csharp
+// Initialize with your Stripe API key
+StripeTransactionConfiguration.Initialize("your_stripe_api_key");
+
+// Use the transaction
+using (var transaction = new StripeTransaction())
+{
+    // Create a customer
+    var customer = await transaction.ExecuteAsync(async () =>
+    {
+        var customerService = new CustomerService();
+        return await customerService.CreateAsync(new CustomerCreateOptions
+        {
+            Email = "customer@example.com",
+            Name = "John Doe"
+        });
+    });
+
+    // Add a payment method
+    var paymentMethod = await transaction.ExecuteAsync(async () =>
+    {
+        var paymentMethodService = new PaymentMethodService();
+        return await paymentMethodService.CreateAsync(new PaymentMethodCreateOptions
+        {
+            Type = "card",
+            Card = new PaymentMethodCardOptions
+            {
+                Number = "4242424242424242",
+                ExpMonth = 12,
+                ExpYear = 2024,
+                Cvc = "123"
+            }
+        });
+    });
+}
+```
 
 ## Features
 
-- Transaction support for Stripe operations
-- Automatic rollback on failure
-- Support for multiple operations in a single transaction
-- Simple and intuitive API
-- Built-in configuration management
+- 🔄 Transaction-like behavior for Stripe operations
+- ⚡ Automatic rollback on failure
+- 📝 Comprehensive logging support
+- 🛠️ Support for multiple Stripe operations:
+  - Customer management
+  - Payment method handling
+  - Subscription management
+  - Webhook endpoint management
+  - Payment intent processing
+  - Invoice management
 
 ## Installation
 
@@ -16,92 +63,25 @@ A .NET library that provides transaction support for Stripe operations with auto
 dotnet add package StripeTransaction
 ```
 
-## Configuration
+## Requirements
 
-Initialize the package with your Stripe API key in your application startup:
+- .NET Core 3.1 or later (.NET Core 3.1, .NET 5, .NET 6, .NET 7, .NET 8)
+- Stripe.net 41.0.0 or later
 
-```csharp
-// In Program.cs or Startup.cs
-StripeTransactionConfiguration.Initialize("your_stripe_api_key");
+## Documentation
 
-// Or with a specific API version
-StripeTransactionConfiguration.Initialize("your_stripe_api_key", "2023-10-16");
-```
-
-## Usage
-
-Here's a simple example of how to use the library:
-
-```csharp
-using (var transaction = new StripeTransaction())
-{
-    try
-    {
-        // Create a customer
-        var customer = await transaction.ExecuteAsync(
-            // Operation to execute
-            async () =>
-            {
-                var service = new CustomerService();
-                return await service.CreateAsync(new CustomerCreateOptions
-                {
-                    Email = "customer@example.com",
-                    Name = "John Doe"
-                });
-            },
-            // Rollback operation
-            async (Customer c) =>
-            {
-                var service = new CustomerService();
-                await service.DeleteAsync(c.Id);
-            }
-        );
-
-        // Update the customer
-        await transaction.ExecuteAsync(
-            async () =>
-            {
-                var service = new CustomerService();
-                await service.UpdateAsync(customer.Id, new CustomerUpdateOptions
-                {
-                    Description = "Updated customer"
-                });
-            },
-            async () =>
-            {
-                var service = new CustomerService();
-                await service.UpdateAsync(customer.Id, new CustomerUpdateOptions
-                {
-                    Description = "Original description"
-                });
-            }
-        );
-    }
-    catch (Exception ex)
-    {
-        // If any operation fails, all previous operations are automatically rolled back
-        Console.WriteLine($"Transaction failed: {ex.Message}");
-    }
-}
-```
-
-## How It Works
-
-1. Create a transaction scope using `using (var transaction = new StripeTransaction())`
-2. Inside the scope, use `ExecuteAsync` to perform Stripe operations
-3. For each operation, provide:
-   - The operation to execute
-   - The rollback operation to perform if something fails
-4. If any operation fails, all previous operations are automatically rolled back
-
-## Best Practices
-
-1. Always initialize the package with your Stripe API key at application startup
-2. Use the `using` statement to ensure proper disposal and rollback
-3. Keep rollback operations simple and focused
-4. Handle exceptions appropriately
-5. Test your rollback scenarios thoroughly
+For detailed documentation, examples, and API reference, visit our [GitHub repository](https://github.com/pekugur34/StripeTransaction).
 
 ## License
 
-MIT License 
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/pekugur34/StripeTransaction/blob/main/LICENSE) file for details.
+
+## Support
+
+- 📚 [Documentation](https://github.com/pekugur34/StripeTransaction)
+- 🐛 [Issue Tracker](https://github.com/pekugur34/StripeTransaction/issues)
+- 💬 [Discussions](https://github.com/pekugur34/StripeTransaction/discussions)
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. 
